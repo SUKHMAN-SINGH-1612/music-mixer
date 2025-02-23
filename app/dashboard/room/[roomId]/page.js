@@ -1,22 +1,48 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { supabase } from "../../../supabase/client";
 import { PlusCircle, Trash, Play } from "lucide-react";
 
 export default function RoomPage() {
   const { roomId } = useParams(); // Get room ID from URL
-  const [roomName, setRoomName] = useState("");
+  const [room, setRoom] = useState(null);
+  const [error, setError] = useState(null);
   const [songs, setSongs] = useState([]);
 
-  // Simulate fetching room data (Replace with API call later)
   useEffect(() => {
-    setRoomName(`Room ${roomId}`);
-    setSongs([
-      { id: 1, title: "Blinding Lights", artist: "The Weeknd" },
-      { id: 2, title: "Shape of You", artist: "Ed Sheeran" },
-    ]);
+    if (!roomId) return; // Ensure roomId is available
+
+    const fetchRoomData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("rooms")
+          .select("*")
+          .eq("room_code", roomId)
+          .single();
+
+        if (error) {
+          setError("Error fetching room data");
+          console.error("Error fetching room data:", error);
+        } else {
+          setRoom(data);
+        }
+      } catch (error) {
+        setError("Error fetching room data");
+        console.error("Error fetching room data:", error);
+      }
+    };
+
+    fetchRoomData();
   }, [roomId]);
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
+  if (!room) {
+    return <div className="text-gray-300">Loading...</div>;
+  }
 
   const addSong = () => {
     const newSong = { id: Date.now(), title: "New Song", artist: "Unknown" };
@@ -29,8 +55,8 @@ export default function RoomPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-white mb-4">{roomName}</h1>
-      <p className="text-gray-300 mb-6">Room Code: <span className="font-semibold">{roomId}</span></p>
+      <h1 className="text-3xl font-bold text-white mb-4">{room.room_name}</h1>
+      <p className="text-gray-300 mb-6">Room Code: <span className="font-semibold">{room.room_code}</span></p>
 
       {/* Playlist Section */}
       <div className="bg-white bg-opacity-20 backdrop-blur-sm p-4 rounded-lg">
