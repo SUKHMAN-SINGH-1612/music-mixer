@@ -8,7 +8,7 @@ export default function DashboardLayout({ children }) {
     <div className="flex h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-white bg-opacity-10 backdrop-blur-sm">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-white bg-opacity-10 backdrop-blur-sm pb-16">
           {children}
         </main>
         <MobileNavigation />
