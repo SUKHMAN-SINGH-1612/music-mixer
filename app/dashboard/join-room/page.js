@@ -1,18 +1,37 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function JoinRoom() {
   const [roomCode, setRoomCode] = useState("");
+  const { data: session } = useSession();
   const router = useRouter();
 
-  const handleJoinRoom = (e) => {
+  const handleJoinRoom = async (e) => {
     e.preventDefault();
-    if (!roomCode.trim()) return;
+    if (!roomCode.trim() || !session?.user?.id) return;
 
-    // Simulated room join (replace with API call later)
-    router.push(`/dashboard/room/${roomCode}`);
+    try {
+      const response = await fetch("/api/supabase/join-room", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          room_code: roomCode,
+          google_id: session.user.id,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        router.push(`/dashboard/room/${roomCode}`);
+      } else {
+        console.error("Error joining room:", data.error);
+      }
+    } catch (error) {
+      console.error("Error joining room:", error);
+    }
   };
 
   return (
@@ -31,7 +50,7 @@ export default function JoinRoom() {
             required
           />
         </div>
-        <button type="submit" className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded">
+        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded">
           Join Room
         </button>
       </form>
