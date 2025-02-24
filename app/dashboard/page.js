@@ -2,12 +2,13 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PlusCircle, Key } from "lucide-react";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
+  const [rooms, setRooms] = useState([]);
   const router = useRouter();
 
   // Redirect to home if user is not authenticated
@@ -16,6 +17,29 @@ export default function Dashboard() {
       router.push("/");
     }
   }, [status, router]);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      const fetchRooms = async () => {
+        try {
+          const response = await fetch(`/api/supabase/get-user-rooms?google_id=${session.user.id}`);
+          const data = await response.json();
+
+          if (response.ok) {
+            setRooms(data);
+          } else {
+            console.error("Error fetching rooms:", data.error);
+            setError(data.error);
+          }
+        } catch (error) {
+          console.error("Error fetching rooms:", error);
+          setError("An error occurred while fetching rooms.");
+        }
+      };
+
+      fetchRooms();
+    }
+  }, [session]);
 
   const handleSignOut = async () => {
     await signOut({ redirect: false });
@@ -54,22 +78,28 @@ export default function Dashboard() {
         <h2 className="text-lg font-medium text-white mb-2">My Rooms</h2>
         <p className="text-sm text-gray-200 mb-4">Your recently active rooms</p>
 
-        <ul className="divide-y divide-gray-200 divide-opacity-20">
-          {[1, 2, 3].map((room) => (
-            <li key={room} className="px-4 py-4 sm:px-6 hover:bg-white hover:bg-opacity-10 transition-colors duration-150">
+        {rooms.length === 0 ? (
+        <p className="text-gray-300">No rooms available.</p>
+      ) : (
+      <ul className="divide-y divide-gray-200 divide-opacity-20">
+          {rooms.slice(0, 3).map((room) => (
+            <li key={room.room_code} className="px-4 py-4 sm:px-6 hover:bg-white hover:bg-opacity-10 transition-colors duration-150">
+            <Link href={`/dashboard/room/${room.room_code}`}>
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-white truncate">Room {room}</p>
+                <p className="text-sm font-medium text-white truncate">{room.room_name}</p>
                 <span className="px-2 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800">
                   Active
                 </span>
-              </div>
-              <div className="mt-2 sm:flex sm:justify-between">
-                <p className="text-sm text-gray-200">5 members</p>
-                <p className="text-sm text-gray-200">Last active: 3 hours ago</p>
-              </div>
+                </div>
+                <div className="mt-2 sm:flex sm:justify-between">
+                  <p className="text-sm text-gray-200">{room.member_count} Members</p>
+                  <p className="text-sm text-gray-200">Last active: 3 hours ago</p>
+                </div>
+              </Link>
             </li>
           ))}
         </ul>
+      )}
       </div>
 
       <button

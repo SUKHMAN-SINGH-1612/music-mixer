@@ -40,6 +40,8 @@ export async function GET(req) {
         room_name: room ? room.room_name : "Unknown Room",
       };
     });
+    const randomRooms = combinedData.sort(() => 0.5 - Math.random()).slice(0, 3);
+
 
     return new Response(JSON.stringify(combinedData), { status: 200 });
   } catch (error) {
