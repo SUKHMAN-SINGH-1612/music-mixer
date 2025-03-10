@@ -1,4 +1,8 @@
 import { supabase } from "../../../supabase/client";
+import NodeCache from "node-cache";
+
+// Create a cache instance with a TTL (time-to-live) of 60 seconds
+const cache = new NodeCache({ stdTTL: 60 });
 
 export async function GET(req) {
   try {
@@ -7,6 +11,12 @@ export async function GET(req) {
 
     if (!google_id) {
       return new Response(JSON.stringify({ error: "Google ID is required" }), { status: 400 });
+    }
+
+    // Check if the data is already in the cache
+    const cachedData = cache.get(google_id);
+    if (cachedData) {
+      return new Response(JSON.stringify(cachedData), { status: 200 });
     }
 
     // Fetch room codes where the user is a member
@@ -28,10 +38,6 @@ export async function GET(req) {
 
     if (roomsError) throw roomsError;
 
-    // Log the fetched room codes and room data for debugging
-    console.log("Room Codes Data:", roomCodesData);
-    console.log("Rooms Data:", roomsData);
-
     // Combine room codes with their names
     const combinedData = roomCodesData.map(roomCode => {
       const room = roomsData.find(r => r.room_code === roomCode.room_code);
@@ -40,8 +46,9 @@ export async function GET(req) {
         room_name: room ? room.room_name : "Unknown Room",
       };
     });
-    const randomRooms = combinedData.sort(() => 0.5 - Math.random()).slice(0, 3);
 
+    // Cache the combined data
+    cache.set(google_id, combinedData);
 
     return new Response(JSON.stringify(combinedData), { status: 200 });
   } catch (error) {
