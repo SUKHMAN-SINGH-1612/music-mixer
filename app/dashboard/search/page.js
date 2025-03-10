@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Search } from "lucide-react";
+import { searchSongs } from "../../api/spotify/search/route";
 
 export default function SearchSongs() {
   const [query, setQuery] = useState("");
@@ -11,13 +12,8 @@ export default function SearchSongs() {
     e.preventDefault();
     if (!query.trim()) return;
 
-    // Simulated API call (replace with real API)
-    const mockResults = [
-      { id: 1, title: "Blinding Lights", artist: "The Weeknd" },
-      { id: 2, title: "Shape of You", artist: "Ed Sheeran" },
-      { id: 3, title: "Levitating", artist: "Dua Lipa" },
-    ];
-    setSongs(mockResults);
+    const results = await searchSongs(query);
+    setSongs(results);
   };
 
   return (
@@ -41,9 +37,12 @@ export default function SearchSongs() {
       {/* Results */}
       <ul className="mt-6 space-y-4">
         {songs.map((song) => (
-          <li key={song.id} className="bg-white bg-opacity-20 p-4 rounded-lg">
-            <p className="text-white font-semibold">{song.title}</p>
-            <p className="text-gray-300">{song.artist}</p>
+          <li key={song.id} className="bg-white bg-opacity-20 p-4 rounded-lg flex items-center space-x-4">
+            <img src={song.image} alt={song.name} className="w-16 h-16 rounded object-cover" />
+            <div className="flex-1">
+              <p className="text-white font-semibold text-lg">{song.name}</p>
+              <p className="text-gray-300">{song.artists}</p>
+            </div>
           </li>
         ))}
       </ul>
