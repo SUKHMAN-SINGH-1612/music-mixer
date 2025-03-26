@@ -212,7 +212,7 @@ export default function RoomPage() {
                   placeholder="Type a message..."
                   className="flex-1 px-3 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary bg-white bg-opacity-20 text-white placeholder-gray-300"
                 />
-                <button className="bg-primary text-white px-4 py-2 rounded-r-md hover:bg-opacity-80 transition-colors duration-150">
+                <button className="bg-primary text-white px-4 py-2 rounded-r-md hover:bg-opacity-80 transition-colors duration-150 flex items-center justify-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5"
@@ -224,7 +224,7 @@ export default function RoomPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M5 10l7-7m0 0l7 7m-7-7v18"
+                      d="M14.752 11.168l-9.6-5.6a1 1 0 00-1.5.866v11.132a1 1 0 001.5.866l9.6-5.6a1 1 0 000-1.732z"
                     />
                   </svg>
                 </button>
