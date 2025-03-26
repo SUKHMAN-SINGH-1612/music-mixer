@@ -118,137 +118,140 @@ export default function RoomPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-500 to-purple-500 text-white">
-      <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Playlist Section */}
-        <div className="col-span-2 bg-white bg-opacity-10 backdrop-blur-md p-6 rounded-lg">
-          <h1 className="text-2xl font-bold mb-4">{room.room_name}</h1>
-          <p className="text-sm text-gray-300 mb-6">
-            Code: <span className="font-semibold">{room.room_code}</span>
-          </p>
-          <div className="bg-white bg-opacity-20 p-4 rounded-lg">
-            <h2 className="text-lg font-semibold mb-4">Playlist</h2>
-            <ul className="space-y-4">
-              {songs.map((song) => (
-                <li
-                  key={song.id}
-                  className="bg-white bg-opacity-10 p-3 rounded flex justify-between items-center"
-                >
-                  <div>
-                    <p className="font-semibold">{song.title}</p>
-                    <p className="text-sm text-gray-300">{song.artist}</p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button className="text-green-400 hover:text-green-600">
-                      <Play className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => removeSong(song.id)}
-                      className="text-red-400 hover:text-red-600"
-                    >
-                      <Trash className="w-5 h-5" />
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <button
-              onClick={() => setShowSearch(!showSearch)}
-              className="mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded flex items-center"
-            >
-              <PlusCircle className="mr-2" /> Add Song
-            </button>
-            {showSearch && (
-              <div className="mt-4">
-                <form onSubmit={handleSearch} className="flex items-center space-x-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">{room.room_name}</h1>
+          <p className="text-gray-200">Code: {room.room_code}</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Playlist Section */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
+                <h2 className="text-lg leading-6 font-medium">Playlist</h2>
+                <div className="relative w-full sm:w-64">
                   <input
                     type="text"
+                    placeholder="Search songs..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search for songs..."
-                    className="flex-1 p-2 rounded bg-gray-800 text-white border border-gray-600"
-                    required
+                    className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white bg-opacity-20 text-white placeholder-gray-300"
                   />
-                  <button
-                    type="submit"
-                    className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded"
+                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-300" />
+                </div>
+              </div>
+              <ul className="divide-y divide-gray-200 divide-opacity-20">
+                {songs.map((song) => (
+                  <li
+                    key={song.id}
+                    className="px-4 py-4 flex items-center justify-between hover:bg-white hover:bg-opacity-10 transition-colors duration-150"
                   >
-                    <Search />
-                  </button>
-                </form>
-                <ul className="mt-4 space-y-2">
-                  {searchResults.map((song) => (
-                    <li
-                      key={song.id}
-                      className="bg-gray-800 p-2 rounded flex justify-between items-center"
+                    <div>
+                      <p className="text-sm font-medium">{song.title}</p>
+                      <p className="text-sm text-gray-300">{song.artist}</p>
+                    </div>
+                    <button
+                      onClick={() => removeSong(song.id)}
+                      className="text-red-400 hover:text-red-300 transition-colors duration-150"
                     >
-                      <div>
-                        <p className="font-semibold">{song.name}</p>
-                        <p className="text-sm text-gray-400">{song.artists}</p>
-                      </div>
-                      <button
-                        onClick={() => addSongToPlaylist(song)}
-                        className="text-green-400 hover:text-green-600"
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm shadow sm:rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h2 className="text-lg leading-6 font-medium mb-4">Search & Add Songs</h2>
+                <form onSubmit={handleSearch} className="space-y-4">
+                  <input
+                    type="text"
+                    placeholder="Search for songs..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white bg-opacity-20 text-white placeholder-gray-300"
+                  />
+                  <ul className="divide-y divide-gray-200 divide-opacity-20">
+                    {searchResults.map((song) => (
+                      <li
+                        key={song.id}
+                        className="px-4 py-4 flex items-center justify-between hover:bg-white hover:bg-opacity-10 transition-colors duration-150"
                       >
-                        <PlusCircle className="w-5 h-5" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                        <div>
+                          <p className="text-sm font-medium">{song.name}</p>
+                          <p className="text-sm text-gray-300">{song.artists}</p>
+                        </div>
+                        <button
+                          onClick={() => addSongToPlaylist(song)}
+                          className="text-green-400 hover:text-green-300 transition-colors duration-150"
+                        >
+                          Add
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </form>
               </div>
-            )}
+            </div>
           </div>
-        </div>
 
-        {/* Live Chat Section */}
-        <div className="bg-white bg-opacity-10 backdrop-blur-md p-6 rounded-lg">
-          <h2 className="text-lg font-semibold mb-4">Live Chat</h2>
-          <div className="h-64 bg-white bg-opacity-20 rounded-lg p-4 overflow-y-auto">
-            <p className="text-gray-300">Chat feature coming soon...</p>
-          </div>
-          <div className="mt-4 flex items-center">
-            <input
-              type="text"
-              placeholder="Type a message..."
-              className="flex-1 p-2 rounded bg-gray-800 text-white border border-gray-600"
-            />
-            <button className="ml-2 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 10l7-7m0 0l7 7m-7-7v18"
+          {/* Live Chat Section */}
+          <div className="space-y-6">
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6">
+                <h2 className="text-lg leading-6 font-medium">Live Chat</h2>
+              </div>
+              <div className="px-4 py-5 sm:p-6 h-64 overflow-y-auto">
+                <p className="text-gray-300">Chat feature coming soon...</p>
+              </div>
+              <div className="px-4 py-3 bg-white bg-opacity-10 flex">
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  className="flex-1 px-3 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary bg-white bg-opacity-20 text-white placeholder-gray-300"
                 />
-              </svg>
-            </button>
-          </div>
-        </div>
+                <button className="bg-primary text-white px-4 py-2 rounded-r-md hover:bg-opacity-80 transition-colors duration-150">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 10l7-7m0 0l7 7m-7-7v18"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
 
-        {/* Members Section */}
-        <div className="bg-white bg-opacity-10 backdrop-blur-md p-6 rounded-lg">
-          <h2 className="text-lg font-semibold mb-4">Members</h2>
-          <ul className="space-y-4">
-            <li className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-gray-800 rounded-full"></div>
-              <div>
-                <p className="font-semibold">User 1</p>
-                <p className="text-sm text-green-400">Online</p>
+            {/* Members Section */}
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6">
+                <h2 className="text-lg leading-6 font-medium">Members</h2>
               </div>
-            </li>
-            <li className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-gray-800 rounded-full"></div>
-              <div>
-                <p className="font-semibold">User 2</p>
-                <p className="text-sm text-green-400">Online</p>
-              </div>
-            </li>
-          </ul>
+              <ul className="divide-y divide-gray-200 divide-opacity-20">
+                {[1, 2, 3].map((member) => (
+                  <li
+                    key={member}
+                    className="px-4 py-4 flex items-center hover:bg-white hover:bg-opacity-10 transition-colors duration-150"
+                  >
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary"></div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium">User {member}</p>
+                      <p className="text-sm text-gray-300">Online</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>
