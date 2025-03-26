@@ -38,28 +38,43 @@ export default function UserRooms() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-white mb-6">My Rooms</h1>
-
+      <div className="flex items-center justify-between mb-4">
+        <input
+          type="text"
+          placeholder="Search rooms..."
+          className="px-4 py-2 rounded-lg bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500"
+        />
+        <select className="px-4 py-2 rounded-lg bg-white bg-opacity-20 text-white focus:outline-none focus:ring-2 focus:ring-pink-500">
+          <option>Sort by</option>
+          <option>Name</option>
+          <option>Last Active</option>
+        </select>
+      </div>
       {rooms.length === 0 ? (
         <p className="text-gray-300">No rooms available.</p>
       ) : (
-        <ul className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {rooms.map((room) => (
-            <li key={room.room_code} className="bg-white bg-opacity-20 p-4 rounded-lg flex justify-between items-center">
+            <div
+              key={room.room_code}
+              className="bg-white bg-opacity-20 p-6 rounded-lg shadow-md flex flex-col justify-between"
+            >
               <div>
-                <h2 className="text-xl font-semibold text-white">{room.room_name}</h2>
-                <p className="text-gray-200">Room Code: {room.room_code}</p>
+                <h2 className="text-xl font-semibold text-white mb-2">{room.room_name}</h2>
+                <p className="text-gray-200">{room.members_count} members</p>
+                <p className="text-gray-200">Last active: {room.last_active}</p>
               </div>
               <Link
                 href={`/dashboard/room/${room.room_code}`}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center"
+                className="mt-4 bg-black hover:bg-gray-800 text-white px-4 py-2 rounded text-center"
               >
-                <DoorOpen className="mr-2" /> Enter Room
+                Enter Room
               </Link>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
