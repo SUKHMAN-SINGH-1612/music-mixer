@@ -60,14 +60,14 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <Link
           href="/dashboard/create-room"
-          className="flex items-center justify-center p-6 bg-primary text-primary-foreground rounded-lg hover:bg-opacity-90 transition duration-150"
+          className="flex items-center justify-center p-6 bg-primary bg-opacity-80 text-white rounded-lg hover:bg-opacity-90 transition duration-150"
         >
           <PlusCircle className="mr-2" />
           Create New Room
         </Link>
         <Link
           href="/dashboard/join-room"
-          className="flex items-center justify-center p-6 bg-secondary text-secondary-foreground rounded-lg hover:bg-opacity-90 transition duration-150"
+          className="flex items-center justify-center p-6 bg-secondary bg-opacity-80 text-white rounded-lg hover:bg-opacity-90 transition duration-150"
         >
           <Key className="mr-2" />
           Join a Room
