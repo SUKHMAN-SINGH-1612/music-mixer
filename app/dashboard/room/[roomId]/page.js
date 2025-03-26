@@ -153,7 +153,7 @@ export default function RoomPage() {
                     </div>
                     <button
                       onClick={() => removeSong(song.id)}
-                      className="text-red-400 hover:text-red-300 transition-colors duration-150"
+                      className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-colors duration-150"
                     >
                       Remove
                     </button>
@@ -185,7 +185,7 @@ export default function RoomPage() {
                         </div>
                         <button
                           onClick={() => addSongToPlaylist(song)}
-                          className="text-green-400 hover:text-green-300 transition-colors duration-150"
+                          className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition-colors duration-150"
                         >
                           Add
                         </button>
