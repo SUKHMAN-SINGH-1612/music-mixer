@@ -21,7 +21,7 @@ export default function LoginPage() {
         {/* Left Side - Branding */}
         <div className="bg-indigo-600 text-white p-8 md:w-1/2 flex flex-col justify-center items-center">
           <Music className="w-16 h-16 mb-4" />
-          <h1 className="text-3xl font-bold mb-2">Music Mixer</h1>
+          <h1 className="text-3xl font-bold mb-2">Music Collab</h1>
           <p className="text-indigo-200 text-center">
             Join the community and create amazing playlists together!
           </p>
