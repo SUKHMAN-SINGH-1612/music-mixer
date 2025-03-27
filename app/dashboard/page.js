@@ -29,11 +29,9 @@ export default function Dashboard() {
             setRooms(data);
           } else {
             console.error("Error fetching rooms:", data.error);
-            setError(data.error);
           }
         } catch (error) {
           console.error("Error fetching rooms:", error);
-          setError("An error occurred while fetching rooms.");
         }
       };
 
@@ -92,7 +90,7 @@ export default function Dashboard() {
                 </span>
                 </div>
                 <div className="mt-2 sm:flex sm:justify-between">
-                  <p className="text-sm text-gray-200">{room.member_count} Members</p>
+                  <p className="text-sm text-gray-200">{room.members_count} Members</p>
                   <p className="text-sm text-gray-200">Last active: 3 hours ago</p>
                 </div>
               </Link>
