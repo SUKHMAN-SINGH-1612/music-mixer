@@ -16,7 +16,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center p-4 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-purple-800 via-pink-900 to-red-900 flex items-center justify-center p-4 overflow-hidden">
       <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-4xl w-full flex flex-col md:flex-row">
         {/* Left Side - Branding */}
         <div className="bg-indigo-600 text-white p-8 md:w-1/2 flex flex-col justify-center items-center">
