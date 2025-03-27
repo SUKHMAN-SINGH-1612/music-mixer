@@ -38,12 +38,26 @@ export async function GET(req) {
 
     if (roomsError) throw roomsError;
 
-    // Combine room codes with their names
+    // Fetch member counts for each room
+    const { data: roomMembers, error: membersError } = await supabase
+      .from("room_members")
+      .select("room_code, members");
+
+    if (membersError) throw membersError;
+
+    // Map member counts to rooms
+    const memberCounts = roomMembers.reduce((acc, item) => {
+      acc[item.room_code] = item.members ? item.members.length : 0;
+      return acc;
+    }, {});
+
+    // Combine room codes with their names and member counts
     const combinedData = roomCodesData.map(roomCode => {
       const room = roomsData.find(r => r.room_code === roomCode.room_code);
       return {
         room_code: roomCode.room_code,
         room_name: room ? room.room_name : "Unknown Room",
+        members_count: memberCounts[roomCode.room_code] || 0,
       };
     });
 

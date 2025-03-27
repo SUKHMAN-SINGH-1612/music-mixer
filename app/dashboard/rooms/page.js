@@ -91,7 +91,7 @@ export default function UserRooms() {
             >
               <div>
                 <h2 className="text-xl font-semibold text-white mb-2">{room.room_name}</h2>
-                <p className="text-gray-200">{room.members_count} members</p>
+                <p className="text-gray-200">Members: {room.members_count}</p>
                 <p className="text-gray-200">Last active: {room.last_active}</p>
               </div>
               <Link

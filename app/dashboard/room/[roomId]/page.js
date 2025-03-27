@@ -13,6 +13,7 @@ export default function RoomPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
+  const [members, setMembers] = useState([]);
 
   useEffect(() => {
     if (!roomId) return; // Ensure roomId is available
@@ -55,8 +56,39 @@ export default function RoomPage() {
       }
     };
 
+    const fetchMembers = async () => {
+      try {
+        const { data: roomMembers, error: roomError } = await supabase
+          .from("room_members")
+          .select("members")
+          .eq("room_code", roomId)
+          .single();
+
+        if (roomError) {
+          console.error("Error fetching room members:", roomError);
+          return;
+        }
+
+        if (roomMembers && roomMembers.members) {
+          const { data: users, error: usersError } = await supabase
+            .from("users")
+            .select("google_id, name")
+            .in("google_id", roomMembers.members);
+
+          if (usersError) {
+            console.error("Error fetching user data:", usersError);
+          } else {
+            setMembers(users);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching members:", error);
+      }
+    };
+
     fetchRoomData();
     fetchPlaylist();
+    fetchMembers();
   }, [roomId]);
 
   const handleSearch = async (e) => {
@@ -121,7 +153,7 @@ export default function RoomPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">{room.room_name}</h1>
-          <p className="text-gray-200">Code: {room.room_code}</p>
+          <p className="text-white">Code: {room.room_code}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -149,7 +181,7 @@ export default function RoomPage() {
                   >
                     <div>
                       <p className="text-sm font-medium">{song.title}</p>
-                      <p className="text-sm text-gray-300">{song.artist}</p>
+                      <p className="text-sm text-white">{song.artist}</p>
                     </div>
                     <button
                       onClick={() => removeSong(song.id)}
@@ -181,7 +213,7 @@ export default function RoomPage() {
                       >
                         <div>
                           <p className="text-sm font-medium">{song.name}</p>
-                          <p className="text-sm text-gray-300">{song.artists}</p>
+                          <p className="text-sm text-white">{song.artists}</p>
                         </div>
                         <button
                           onClick={() => addSongToPlaylist(song)}
@@ -204,7 +236,7 @@ export default function RoomPage() {
                 <h2 className="text-lg leading-6 font-medium">Live Chat</h2>
               </div>
               <div className="px-4 py-5 sm:p-6 h-64 overflow-y-auto">
-                <p className="text-gray-300">Chat feature coming soon...</p>
+                <p className="text-white">Chat feature coming soon...</p>
               </div>
               <div className="px-4 py-3 bg-white bg-opacity-10 flex">
                 <input
@@ -237,15 +269,21 @@ export default function RoomPage() {
                 <h2 className="text-lg leading-6 font-medium">Members</h2>
               </div>
               <ul className="divide-y divide-gray-200 divide-opacity-20">
-                {[1, 2, 3].map((member) => (
+                {members.map((member) => (
                   <li
-                    key={member}
+                    key={member.google_id}
                     className="px-4 py-4 flex items-center hover:bg-white hover:bg-opacity-10 transition-colors duration-150"
                   >
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary"></div>
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary overflow-hidden">
+                      <img
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=random`}
+                        alt={member.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
                     <div className="ml-3">
-                      <p className="text-sm font-medium">User {member}</p>
-                      <p className="text-sm text-gray-300">Online</p>
+                      <p className="text-sm font-medium">{member.name}</p>
+                      <p className="text-sm text-white">Online</p>
                     </div>
                   </li>
                 ))}
