@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; // Import useRef
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react"; // Import useSession
 import { supabase } from "../../../supabase/client";
@@ -19,6 +19,7 @@ export default function RoomPage() {
   const [members, setMembers] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete confirmation modal
   const [showLeaveModal, setShowLeaveModal] = useState(false); // State for leave confirmation modal
+  const searchBarRef = useRef(null); // Ref for the search bar
 
   useEffect(() => {
     if (!roomId || !session) return; // Ensure roomId and session are available
@@ -98,6 +99,20 @@ export default function RoomPage() {
     fetchPlaylist();
     fetchMembers();
   }, [roomId, session]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchBarRef.current && !searchBarRef.current.contains(event.target)) {
+        setSearchQuery(""); // Reset search query
+        setSearchResults([]); // Clear search results
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -216,15 +231,26 @@ export default function RoomPage() {
             <div className="bg-white bg-opacity-20 backdrop-blur-sm shadow overflow-hidden sm:rounded-lg">
               <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
                 <h2 className="text-lg leading-6 font-medium">Playlist</h2>
-                <div className="relative w-full sm:w-64">
+                <div className="relative w-full sm:w-64" ref={searchBarRef}>
                   <input
                     type="text"
                     placeholder="Search songs..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white bg-opacity-20 text-white placeholder-gray-300"
+                    className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white bg-opacity-20 text-white placeholder-gray-300"
                   />
                   <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-300" />
+                  {searchQuery && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery(""); // Reset search query
+                        setSearchResults([]); // Clear search results
+                      }}
+                      className="absolute right-3 top-2.5 h-5 w-5 text-gray-300 hover:text-white"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               </div>
               <ul className="divide-y divide-gray-200 divide-opacity-20">
