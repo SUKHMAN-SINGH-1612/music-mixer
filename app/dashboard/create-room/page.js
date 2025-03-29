@@ -7,6 +7,7 @@ import { FaMusic } from "react-icons/fa"; // Correct icon import
 
 export default function CreateRoom() {
   const [roomName, setRoomName] = useState("");
+  const [visibility, setVisibility] = useState(true); // Default to private room
   const { data: session } = useSession();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +25,7 @@ export default function CreateRoom() {
         google_id: session.user.id,
         email: session.user.email,
         name: session.user.name,
+        visibility: visibility ? "TRUE" : "FALSE", // Send TRUE or FALSE for visibility
       }),
     });
 
@@ -91,6 +93,37 @@ export default function CreateRoom() {
                 "Create Room"
               )}
             </button>
+          </div>
+
+          {/* Room Visibility Selection */}
+          <div className="mt-6">
+            <h3 className="text-sm font-medium text-white mb-2">Room Privacy</h3>
+            <div className="flex space-x-4">
+              <button
+                type="button"
+                onClick={() => setVisibility(true)}
+                className={`flex-1 py-3 px-4 rounded-lg text-center ${
+                  visibility
+                    ? "bg-black text-white"
+                    : "bg-white bg-opacity-20 text-gray-300 hover:bg-opacity-30"
+                }`}
+              >
+                Private
+                <p className="text-xs">Only people with code can join</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setVisibility(false)}
+                className={`flex-1 py-3 px-4 rounded-lg text-center ${
+                  !visibility
+                    ? "bg-black text-white"
+                    : "bg-white bg-opacity-20 text-gray-300 hover:bg-opacity-30"
+                }`}
+              >
+                Public
+                <p className="text-xs">Anyone can search and join</p>
+              </button>
+            </div>
           </div>
         </form>
       </div>

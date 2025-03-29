@@ -1,12 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react"; // Import useSession
 import { supabase } from "../../../supabase/client";
 import { PlusCircle, Trash, Play, Search } from "lucide-react";
 import { searchSongs } from "../../../api/spotify/search/route";
 
 export default function RoomPage() {
   const { roomId } = useParams(); // Get room ID from URL
+  const router = useRouter();
+  const { data: session } = useSession(); // Retrieve session data
   const [room, setRoom] = useState(null);
   const [error, setError] = useState(null);
   const [songs, setSongs] = useState([]);
@@ -14,9 +17,11 @@ export default function RoomPage() {
   const [searchResults, setSearchResults] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
   const [members, setMembers] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete confirmation modal
+  const [showLeaveModal, setShowLeaveModal] = useState(false); // State for leave confirmation modal
 
   useEffect(() => {
-    if (!roomId) return; // Ensure roomId is available
+    if (!roomId || !session) return; // Ensure roomId and session are available
 
     const fetchRoomData = async () => {
       try {
@@ -50,6 +55,9 @@ export default function RoomPage() {
           console.error("Error fetching playlist:", error);
         } else if (data && data.song_id) {
           setSongs(data.song_id);
+        } else {
+          console.log("No songs found in the playlist.");
+          setSongs([]); // Ensure songs is an empty array if no data is found
         }
       } catch (error) {
         console.error("Error fetching playlist:", error);
@@ -89,7 +97,7 @@ export default function RoomPage() {
     fetchRoomData();
     fetchPlaylist();
     fetchMembers();
-  }, [roomId]);
+  }, [roomId, session]);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -140,6 +148,52 @@ export default function RoomPage() {
     }
   };
 
+  const handleLeaveRoom = async () => {
+    if (!session) {
+      console.error("User is not authenticated");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/supabase/leave-room", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ room_code: roomId, google_id: session.user.id }),
+      });
+
+      if (response.ok) {
+        router.push("/dashboard/rooms"); // Redirect to rooms page
+      } else {
+        console.error("Error leaving room");
+      }
+    } catch (error) {
+      console.error("Error leaving room:", error);
+    }
+  };
+
+  const handleDeleteRoom = async () => {
+    if (!session) {
+      console.error("User is not authenticated");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/supabase/delete-room", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ room_code: roomId, google_id: session.user.id }),
+      });
+
+      if (response.ok) {
+        router.push("/dashboard/rooms"); // Redirect to rooms page
+      } else {
+        console.error("Error deleting room");
+      }
+    } catch (error) {
+      console.error("Error deleting room:", error);
+    }
+  };
+
   if (error) {
     return <div className="text-red-500">{error}</div>;
   }
@@ -174,9 +228,9 @@ export default function RoomPage() {
                 </div>
               </div>
               <ul className="divide-y divide-gray-200 divide-opacity-20">
-                {songs.map((song) => (
+                {songs.map((song, index) => (
                   <li
-                    key={song.id}
+                    key={song.id || index} // Ensure unique key for each song
                     className="px-4 py-4 flex items-center justify-between hover:bg-white hover:bg-opacity-10 transition-colors duration-150"
                   >
                     <div>
@@ -205,10 +259,10 @@ export default function RoomPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white bg-opacity-20 text-white placeholder-gray-300"
                   />
-                  <ul className="divide-y divide-gray-200 divide-opacity-20">
-                    {searchResults.map((song) => (
-                      <li
-                        key={song.id}
+                  <div className="max-h-64 overflow-y-auto divide-y divide-gray-200 divide-opacity-20">
+                    {searchResults.map((song, index) => (
+                      <div
+                        key={song.id || index} // Ensure unique key for each search result
                         className="px-4 py-4 flex items-center justify-between hover:bg-white hover:bg-opacity-10 transition-colors duration-150"
                       >
                         <div>
@@ -221,9 +275,9 @@ export default function RoomPage() {
                         >
                           Add
                         </button>
-                      </li>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </form>
               </div>
             </div>
@@ -268,10 +322,10 @@ export default function RoomPage() {
               <div className="px-4 py-5 sm:px-6">
                 <h2 className="text-lg leading-6 font-medium">Members</h2>
               </div>
-              <ul className="divide-y divide-gray-200 divide-opacity-20">
-                {members.map((member) => (
+              <ul className="divide-y divide-gray-200 divide-opacity-20 max-h-64 overflow-y-auto">
+                {members.map((member, index) => (
                   <li
-                    key={member.google_id}
+                    key={member.google_id || index} // Ensure unique key for each member
                     className="px-4 py-4 flex items-center hover:bg-white hover:bg-opacity-10 transition-colors duration-150"
                   >
                     <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary overflow-hidden">
@@ -288,9 +342,84 @@ export default function RoomPage() {
                   </li>
                 ))}
               </ul>
+              {/* Fixed Buttons */}
+              <div className="px-4 py-3 bg-white bg-opacity-10 flex flex-col sm:flex-row justify-center items-center gap-2">
+                <button
+                  onClick={() => setShowLeaveModal(true)} // Show leave confirmation modal
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-3/4 sm:w-auto max-w-xs"
+                >
+                  Leave Room
+                </button>
+                {room.google_id === session.user.id && (
+                  <button
+                    onClick={() => setShowDeleteModal(true)} // Show delete confirmation modal
+                    className="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-800 w-3/4 sm:w-auto max-w-xs"
+                  >
+                    Delete Room
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Leave Confirmation Modal */}
+        {showLeaveModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-96 shadow-lg">
+              <h2 className="text-xl font-bold text-white mb-4">Confirm Leave</h2>
+              <p className="text-gray-300 mb-6">
+                Are you sure you want to leave this room? You will no longer be a member of this room.
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowLeaveModal(false)} // Close modal
+                  className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLeaveModal(false);
+                    handleLeaveRoom();
+                  }}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                >
+                  Leave
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-96 shadow-lg">
+              <h2 className="text-xl font-bold text-white mb-4">Confirm Delete</h2>
+              <p className="text-gray-300 mb-6">
+                Are you sure you want to delete this room? This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowDeleteModal(false)} // Close modal
+                  className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    handleDeleteRoom();
+                  }}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
