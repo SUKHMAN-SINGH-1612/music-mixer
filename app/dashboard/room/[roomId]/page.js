@@ -22,6 +22,7 @@ export default function RoomPage() {
   const searchBarRef = useRef(null); // Ref for the search bar
   const [messages, setMessages] = useState([]); // State for messages
   const [newMessage, setNewMessage] = useState(""); // State for new message
+  const [userMap, setUserMap] = useState({}); // State to map google_id to user names
 
   useEffect(() => {
     if (!roomId || !session) return; // Ensure roomId and session are available
@@ -111,10 +112,31 @@ export default function RoomPage() {
       }
     };
 
+    const fetchUsers = async () => {
+      try {
+        const { data: users, error } = await supabase
+          .from("users")
+          .select("google_id, name");
+
+        if (error) {
+          console.error("Error fetching users:", error);
+        } else {
+          const userMapping = users.reduce((map, user) => {
+            map[user.google_id] = user.name;
+            return map;
+          }, {});
+          setUserMap(userMapping);
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
     fetchRoomData();
     fetchPlaylist();
     fetchMembers();
     fetchMessages();
+    fetchUsers();
 
     // Listen for new messages
     const subscription = supabase
@@ -351,7 +373,7 @@ export default function RoomPage() {
               <div className="px-4 py-5 sm:p-6 h-64 overflow-y-auto">
                 {messages.map((msg) => (
                   <div key={msg.id} className="mb-2">
-                    <p className="text-sm font-medium">{msg.google_id}</p>
+                    <p className="text-sm font-medium">{userMap[msg.google_id] || "Unknown User"}</p>
                     <p className="text-sm text-white">{msg.message}</p>
                     <p className="text-xs text-gray-400">{new Date(msg.created_at).toLocaleTimeString()}</p>
                   </div>
