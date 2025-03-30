@@ -22,63 +22,31 @@ export default function RoomPage() {
   const searchBarRef = useRef(null); // Ref for the search bar
   const [messages, setMessages] = useState([]); // Add state for messages
   const [newMessage, setNewMessage] = useState(""); // Add state for new message
+  const [userMap, setUserMap] = useState({}); // Add state to store user data
 
   useEffect(() => {
-    if (!roomId || !session) return; // Ensure roomId and session are available
+    if (!roomId || !session) return;
 
     const fetchRoomData = async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch room data
+        const { data: roomData, error: roomError } = await supabase
           .from("rooms")
           .select("*")
           .eq("room_code", roomId)
           .single();
 
-        if (error) {
-          setError("Error fetching room data");
-          console.error("Error fetching room data:", error);
-        } else {
-          setRoom(data);
-        }
-      } catch (error) {
-        setError("Error fetching room data");
-        console.error("Error fetching room data:", error);
-      }
-    };
+        if (roomError) throw roomError;
+        setRoom(roomData);
 
-    const fetchPlaylist = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("playlist")
-          .select("song_id")
-          .eq("room_code", roomId)
-          .single();
-
-        if (error) {
-          console.error("Error fetching playlist:", error);
-        } else if (data && data.song_id) {
-          setSongs(data.song_id);
-        } else {
-          console.log("No songs found in the playlist.");
-          setSongs([]); // Ensure songs is an empty array if no data is found
-        }
-      } catch (error) {
-        console.error("Error fetching playlist:", error);
-      }
-    };
-
-    const fetchMembers = async () => {
-      try {
-        const { data: roomMembers, error: roomError } = await supabase
+        // Fetch members and create a user map
+        const { data: roomMembers, error: membersError } = await supabase
           .from("room_members")
           .select("members")
           .eq("room_code", roomId)
           .single();
 
-        if (roomError) {
-          console.error("Error fetching room members:", roomError);
-          return;
-        }
+        if (membersError) throw membersError;
 
         if (roomMembers && roomMembers.members) {
           const { data: users, error: usersError } = await supabase
@@ -86,40 +54,27 @@ export default function RoomPage() {
             .select("google_id, name")
             .in("google_id", roomMembers.members);
 
-          if (usersError) {
-            console.error("Error fetching user data:", usersError);
-          } else {
-            setMembers(users);
-          }
+          if (usersError) throw usersError;
+
+          // Create a map of google_id to name
+          const userMap = users.reduce((map, user) => {
+            map[user.google_id] = user.name;
+            return map;
+          }, {});
+          setUserMap(userMap);
         }
       } catch (error) {
-        console.error("Error fetching members:", error);
+        console.error("Error fetching room data:", error);
+        setError("Error fetching room data");
       }
     };
 
     fetchRoomData();
-    fetchPlaylist();
-    fetchMembers();
   }, [roomId, session]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchBarRef.current && !searchBarRef.current.contains(event.target)) {
-        setSearchQuery(""); // Reset search query
-        setSearchResults([]); // Clear search results
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   useEffect(() => {
     if (!roomId) return;
 
-    // Fetch existing messages
     const fetchMessages = async () => {
       const { data, error } = await supabase
         .from("room_messages")
@@ -136,7 +91,6 @@ export default function RoomPage() {
 
     fetchMessages();
 
-    // Listen for new messages
     const subscription = supabase
       .channel(`room_messages:${roomId}`)
       .on(
@@ -152,6 +106,20 @@ export default function RoomPage() {
       supabase.removeChannel(subscription);
     };
   }, [roomId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchBarRef.current && !searchBarRef.current.contains(event.target)) {
+        setSearchQuery(""); // Reset search query
+        setSearchResults([]); // Clear search results
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -382,7 +350,7 @@ export default function RoomPage() {
               <div className="px-4 py-5 sm:p-6 h-64 overflow-y-auto">
                 {messages.map((msg) => (
                   <div key={msg.id} className="mb-2">
-                    <p className="text-sm font-medium">{msg.google_id}</p>
+                    <p className="text-sm font-medium">{userMap[msg.google_id] || "Unknown User"}</p>
                     <p className="text-sm text-white">{msg.message}</p>
                     <p className="text-xs text-gray-400">{new Date(msg.created_at).toLocaleTimeString()}</p>
                   </div>
