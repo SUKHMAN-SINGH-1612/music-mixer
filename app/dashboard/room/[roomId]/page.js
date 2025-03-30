@@ -20,6 +20,8 @@ export default function RoomPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete confirmation modal
   const [showLeaveModal, setShowLeaveModal] = useState(false); // State for leave confirmation modal
   const searchBarRef = useRef(null); // Ref for the search bar
+  const [messages, setMessages] = useState([]); // Add state for messages
+  const [newMessage, setNewMessage] = useState(""); // Add state for new message
 
   useEffect(() => {
     if (!roomId || !session) return; // Ensure roomId and session are available
@@ -114,6 +116,43 @@ export default function RoomPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!roomId) return;
+
+    // Fetch existing messages
+    const fetchMessages = async () => {
+      const { data, error } = await supabase
+        .from("room_messages")
+        .select("*")
+        .eq("room_code", roomId)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching messages:", error);
+      } else {
+        setMessages(data);
+      }
+    };
+
+    fetchMessages();
+
+    // Listen for new messages
+    const subscription = supabase
+      .channel(`room_messages:${roomId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "room_messages", filter: `room_code=eq.${roomId}` },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [roomId]);
+
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
@@ -206,6 +245,31 @@ export default function RoomPage() {
       }
     } catch (error) {
       console.error("Error deleting room:", error);
+    }
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    try {
+      const response = await fetch("/api/supabase/send-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          room_code: roomId,
+          google_id: session.user.id,
+          message: newMessage,
+        }),
+      });
+
+      if (response.ok) {
+        setNewMessage(""); // Clear input
+      } else {
+        console.error("Error sending message");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
     }
   };
 
@@ -316,29 +380,27 @@ export default function RoomPage() {
                 <h2 className="text-lg leading-6 font-medium">Live Chat</h2>
               </div>
               <div className="px-4 py-5 sm:p-6 h-64 overflow-y-auto">
-                <p className="text-white">Chat feature coming soon...</p>
+                {messages.map((msg) => (
+                  <div key={msg.id} className="mb-2">
+                    <p className="text-sm font-medium">{msg.google_id}</p>
+                    <p className="text-sm text-white">{msg.message}</p>
+                    <p className="text-xs text-gray-400">{new Date(msg.created_at).toLocaleTimeString()}</p>
+                  </div>
+                ))}
               </div>
               <div className="px-4 py-3 bg-white bg-opacity-10 flex">
                 <input
                   type="text"
                   placeholder="Type a message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
                   className="flex-1 px-3 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary bg-white bg-opacity-20 text-white placeholder-gray-300"
                 />
-                <button className="bg-primary text-white px-4 py-2 rounded-r-md hover:bg-opacity-80 transition-colors duration-150 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M14.752 11.168l-9.6-5.6a1 1 0 00-1.5.866v11.132a1 1 0 001.5.866l9.6-5.6a1 1 0 000-1.732z"
-                    />
-                  </svg>
+                <button
+                  onClick={sendMessage}
+                  className="bg-primary text-white px-4 py-2 rounded-r-md hover:bg-opacity-80 transition-colors duration-150 flex items-center justify-center"
+                >
+                  Send
                 </button>
               </div>
             </div>
