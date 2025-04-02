@@ -409,7 +409,7 @@ export default function RoomPage() {
                   >
                     <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary overflow-hidden">
                       <img
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=random`}
+                        src={member.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=random`}
                         alt={member.name}
                         className="h-full w-full object-cover"
                       />
