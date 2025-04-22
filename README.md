@@ -131,7 +131,7 @@
 - **Music API:** Spotify API/YouTube API
 
 
-### 6. Project Milestones
+### 6. Project Milestones (Planned)
 
 1. **Authentication and Basic UI Setup:** (1 day)
     * Implement Firebase OAuth.
