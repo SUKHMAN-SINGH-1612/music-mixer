@@ -123,10 +123,9 @@
 
 ### 5. Technology Stack
 
-- **Frontend:** React/Vue.js
-- **Backend:** Node.js with Express/ Python with Flask or Django
-- **Database:** MongoDB/PostgreSQL
-- **Authentication:** Firebase OAuth
+- **Framework:** Next.js
+- **Database:** Supabase/PostgreSQL
+- **Authentication:** Google OAuth 2.0
 - **Real-time Communication:** WebSockets (Socket.IO)
 - **Music API:** Spotify API/YouTube API
 
