@@ -23,6 +23,7 @@ export default function RoomPage() {
   const [messages, setMessages] = useState([]); // State for messages
   const [newMessage, setNewMessage] = useState(""); // State for new message
   const [userMap, setUserMap] = useState({}); // State to map google_id to user names
+  const [userStatusMap, setUserStatusMap] = useState({}); // State to track user online/offline status
 
   useEffect(() => {
     if (!roomId || !session) return; // Ensure roomId and session are available
@@ -132,11 +133,45 @@ export default function RoomPage() {
       }
     };
 
+    // Fetch initial user statuses using the new API
+    const fetchUserStatuses = async () => {
+      try {
+        const response = await fetch("/api/supabase/user-status");
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Error response from API:", errorData);
+          throw new Error("Failed to fetch user statuses");
+        }
+        const data = await response.json();
+        const statusMap = data.reduce((map, user) => {
+          map[user.google_id] = user.status;
+          return map;
+        }, {});
+        setUserStatusMap(statusMap);
+      } catch (error) {
+        console.error("Error fetching user statuses:", error);
+      }
+    };
+
+    // Listen for user presence changes using the new API
+    const presenceSubscription = supabase
+      .channel("online-users")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_status" },
+        async (payload) => {
+          const { google_id, status } = payload.new;
+          setUserStatusMap((prev) => ({ ...prev, [google_id]: status }));
+        }
+      )
+      .subscribe();
+
     fetchRoomData();
     fetchPlaylist();
     fetchMembers();
     fetchMessages();
     fetchUsers();
+    fetchUserStatuses();
 
     // Listen for new messages
     const subscription = supabase
@@ -152,6 +187,7 @@ export default function RoomPage() {
 
     return () => {
       supabase.removeChannel(subscription);
+      supabase.removeChannel(presenceSubscription);
     };
   }, [roomId, session]);
 
@@ -416,7 +452,9 @@ export default function RoomPage() {
                     </div>
                     <div className="ml-3">
                       <p className="text-sm font-medium">{member.name}</p>
-                      <p className="text-sm text-white">Online</p>
+                      <p className="text-sm text-white">
+                        {userStatusMap[member.google_id] === "online" ? "Online" : "Offline"}
+                      </p>
                     </div>
                   </li>
                 ))}

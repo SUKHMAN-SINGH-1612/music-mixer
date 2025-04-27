@@ -25,7 +25,7 @@ export default function CreateRoom() {
         google_id: session.user.id,
         email: session.user.email,
         name: session.user.name,
-        visibility: visibility ? "TRUE" : "FALSE", // Send TRUE or FALSE for visibility
+        visibility: visibility ? "private" : "public", // Send "private" or "public" for visibility
       }),
     });
 

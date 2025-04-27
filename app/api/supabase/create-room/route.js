@@ -3,7 +3,7 @@ import { nanoid } from "nanoid";
 
 export async function POST(req) {
   try {
-    const { room_name, google_id, email, name } = await req.json();
+    const { room_name, google_id, email, name, visibility } = await req.json(); // Include visibility
     const room_code = nanoid(6); // Generate a unique 6-character code
     const created_at = new Date().toISOString(); // Generate current timestamp
 
@@ -16,6 +16,7 @@ export async function POST(req) {
         google_id,
         email,
         name,
+        visibility, // Add visibility to the insert
         created_at,
         active: true
       }])
