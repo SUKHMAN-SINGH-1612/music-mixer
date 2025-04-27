@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { DoorOpen } from "lucide-react";
+import { supabase } from "../../supabase/client";
 
 export default function UserRooms() {
   const { data: session } = useSession();
@@ -14,27 +15,76 @@ export default function UserRooms() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (session?.user?.id) {
-      const fetchRooms = async () => {
-        try {
+    if (!session?.user?.id) return;
+
+    const fetchRooms = async () => {
+      try {
+        const response = await fetch(`/api/supabase/get-user-rooms?google_id=${session.user.id}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          setRooms(data);
+          setFilteredRooms(data);
+        } else {
+          console.error("Error fetching rooms:", data.error);
+          setError(data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
+        setError("An error occurred while fetching rooms.");
+      }
+    };
+
+    fetchRooms();
+
+    // Subscribe to real-time changes in rooms
+    const roomsSubscription = supabase
+      .channel('rooms-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'rooms' },
+        async (payload) => {
+          // Refetch rooms when any change occurs
           const response = await fetch(`/api/supabase/get-user-rooms?google_id=${session.user.id}`);
           const data = await response.json();
-
+          
           if (response.ok) {
             setRooms(data);
             setFilteredRooms(data);
-          } else {
-            console.error("Error fetching rooms:", data.error);
-            setError(data.error);
           }
-        } catch (error) {
-          console.error("Error fetching rooms:", error);
-          setError("An error occurred while fetching rooms.");
         }
-      };
+      )
+      .subscribe();
 
-      fetchRooms();
-    }
+    // Subscribe to real-time changes in room_members
+    const roomMembersSubscription = supabase
+      .channel('room-members-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'room_members' },
+        async (payload) => {
+          // Check if the change affects the current user
+          if (payload.new && payload.new.members && 
+              (payload.new.members.includes(session.user.id) || 
+               payload.old?.members?.includes(session.user.id))) {
+            // Refetch rooms when membership changes
+            const response = await fetch(`/api/supabase/get-user-rooms?google_id=${session.user.id}`);
+            const data = await response.json();
+            
+            if (response.ok) {
+              setRooms(data);
+              setFilteredRooms(data);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscriptions
+    return () => {
+      supabase.removeChannel(roomsSubscription);
+      supabase.removeChannel(roomMembersSubscription);
+    };
   }, [session]);
 
   useEffect(() => {

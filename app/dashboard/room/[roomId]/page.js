@@ -174,7 +174,7 @@ export default function RoomPage() {
     fetchUserStatuses();
 
     // Listen for new messages
-    const subscription = supabase
+    const messageSubscription = supabase
       .channel(`room_messages:${roomId}`)
       .on(
         "postgres_changes",
@@ -185,9 +185,24 @@ export default function RoomPage() {
       )
       .subscribe();
 
+    // Listen for playlist changes
+    const playlistSubscription = supabase
+      .channel(`playlist:${roomId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "playlist", filter: `room_code=eq.${roomId}` },
+        (payload) => {
+          if (payload.new && payload.new.song_id) {
+            setSongs(payload.new.song_id);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(subscription);
+      supabase.removeChannel(messageSubscription);
       supabase.removeChannel(presenceSubscription);
+      supabase.removeChannel(playlistSubscription);
     };
   }, [roomId, session]);
 
